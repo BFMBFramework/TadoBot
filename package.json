@@ -1,0 +1,27 @@
+{
+  "name": "tadobot",
+  "version": "0.0.0",
+  "description": "A bot for management of Tado devices through Telegram",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BFMBFramework/TadoBot.git"
+  },
+  "keywords": [
+    "Tado",
+    "bot",
+    "Telegram"
+  ],
+  "author": "Ángel González",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/BFMBFramework/TadoBot/issues"
+  },
+  "homepage": "https://github.com/BFMBFramework/TadoBot#readme",
+  "dependencies": {
+    "jayson": "^2.1.2"
+  }
+}
