@@ -2,9 +2,14 @@
   "name": "tadobot",
   "version": "0.0.0",
   "description": "A bot for management of Tado devices through Telegram",
-  "main": "index.js",
+  "main": "./dist/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node ./dist/main.js",
+    "test": "./node_modules/.bin/mocha",
+    "build": "gulp",
+    "clean": "rm -rf ./dist",
+    "rebuild": "npm run clean && npm run build",
+    "gendocs": "typedoc --out ./docs ./src"
   },
   "repository": {
     "type": "git",
@@ -22,6 +27,16 @@
   },
   "homepage": "https://github.com/BFMBFramework/TadoBot#readme",
   "dependencies": {
-    "jayson": "^2.1.2"
+    "async": "^2.6.1",
+    "jayson": "^2.1.0",
+    "winston": "^2.4.4"
+  },
+  "devDependencies": {
+    "@types/async": "^2.0.50",
+    "@types/winston": "^2.4.4",
+    "gulp": "^4.0.0",
+    "gulp-typescript": "^5.0.1",
+    "mocha": "^5.2.0",
+    "typescript": "^3.3.3333"
   }
 }
