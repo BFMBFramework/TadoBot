@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const util = require("util");
 const logger_1 = require("./logger");
 const config_1 = require("./config");
 const client_1 = require("./client");
@@ -14,14 +13,15 @@ class MessageHandler {
         }
     }
     receptionLoop() {
-        logger_1.logger.debug("Executing reception loop.");
         const clientClass = client_1.Client.sharedInstance;
         const self = client_1.Client.sharedInstance.getMessageHandler();
+        logger_1.logger.debug("Executing reception loop.");
         clientClass.getJaysonClient().request('receiveMessage', { token: clientClass.getToken(), network: 'Telegram', options: {} }, function (err, response) {
             self.receptionResponse(err, response);
         });
     }
     receptionResponse(err, response) {
+        const messageProcessor = client_1.Client.sharedInstance.getMessageProcessor();
         logger_1.logger.debug("Received response.");
         if (err) {
             logger_1.logger.error(err.message);
@@ -33,7 +33,7 @@ class MessageHandler {
         }
         let messages = response.result;
         for (let message of messages) {
-            console.log(util.inspect(message, false, null, true));
+            messageProcessor.processMessage(message.message);
         }
     }
 }

@@ -16,15 +16,16 @@ export class MessageHandler {
 	}
 
 	private receptionLoop(): void {
-		logger.debug("Executing reception loop.");
 		const clientClass = Client.sharedInstance;
 		const self = Client.sharedInstance.getMessageHandler();
+		logger.debug("Executing reception loop.");
 		clientClass.getJaysonClient().request('receiveMessage', {token: clientClass.getToken(), network: 'Telegram', options: {}}, function(err: Error, response: any) {
 			self.receptionResponse(err, response);
 		});
 	}
 
 	private receptionResponse(err: Error, response: any): void {
+		const messageProcessor = Client.sharedInstance.getMessageProcessor();
 		logger.debug("Received response.");
 		if (err) {
 			logger.error(err.message);
@@ -36,7 +37,7 @@ export class MessageHandler {
 		}
 		let messages: [any] = response.result
 		for (let message of messages) {
-			console.log(util.inspect(message, false, null, true));
+			messageProcessor.processMessage(message.message);
 		}
 	}
 }

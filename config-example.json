@@ -10,6 +10,9 @@
 	},
 	"requestPolling": 5000,
 	"authorizedUsernames": [
-		"Aglezabad"
+		"Fakeuser"
+	],
+	"availableCommands": [
+		"/help"
 	]
 }

@@ -6,6 +6,7 @@ import {config} from "./config";
 import {packageData} from "./package";
 
 import {MessageHandler} from "./messages";
+import {MessageProcessor} from "./mesprocessor";
 
 export class Client {
 	private static _instance: Client;
@@ -13,10 +14,12 @@ export class Client {
 	private jayson: any;
 	private bfmbToken: string;
 	private messageHandler: MessageHandler;
+	private messageProcessor: MessageProcessor;
 
 	constructor() {
 		this.bfmbToken = "";
 		this.messageHandler = new MessageHandler();
+		this.messageProcessor = new MessageProcessor();
 	}
 
 	static get sharedInstance(): Client {
@@ -34,6 +37,10 @@ export class Client {
 
 	getMessageHandler(): MessageHandler {
 		return this.messageHandler;
+	}
+
+	getMessageProcessor(): MessageProcessor {
+		return this.messageProcessor;
 	}
 
 	getToken(): string {

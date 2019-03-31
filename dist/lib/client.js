@@ -6,10 +6,12 @@ const logger_1 = require("./logger");
 const config_1 = require("./config");
 const package_1 = require("./package");
 const messages_1 = require("./messages");
+const mesprocessor_1 = require("./mesprocessor");
 class Client {
     constructor() {
         this.bfmbToken = "";
         this.messageHandler = new messages_1.MessageHandler();
+        this.messageProcessor = new mesprocessor_1.MessageProcessor();
     }
     static get sharedInstance() {
         return this._instance || (this._instance = new Client());
@@ -23,6 +25,9 @@ class Client {
     }
     getMessageHandler() {
         return this.messageHandler;
+    }
+    getMessageProcessor() {
+        return this.messageProcessor;
     }
     getToken() {
         return this.bfmbToken;
