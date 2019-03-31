@@ -18,6 +18,15 @@ class Client {
         this.welcomeMessage();
         this.createJaysonClient();
     }
+    getJaysonClient() {
+        return this.jayson;
+    }
+    getMessageHandler() {
+        return this.messageHandler;
+    }
+    getToken() {
+        return this.bfmbToken;
+    }
     welcomeMessage() {
         logger_1.logger.info("TadoBot " + package_1.packageData.version);
     }

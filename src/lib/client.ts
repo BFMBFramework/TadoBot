@@ -11,7 +11,7 @@ export class Client {
 	private static _instance: Client;
 
 	private jayson: any;
-	private bfmbToken: any;
+	private bfmbToken: string;
 	private messageHandler: MessageHandler;
 
 	constructor() {
@@ -26,6 +26,18 @@ export class Client {
 	startClient(): void {
 		this.welcomeMessage();
 		this.createJaysonClient();
+	}
+
+	getJaysonClient(): any {
+		return this.jayson;
+	}
+
+	getMessageHandler(): MessageHandler {
+		return this.messageHandler;
+	}
+
+	getToken(): string {
+		return this.bfmbToken;
 	}
 
 	private welcomeMessage(): void {
