@@ -7,17 +7,20 @@ import {packageData} from "./package";
 
 import {MessageHandler} from "./messages";
 import {MessageProcessor} from "./mesprocessor";
+import {TadoData} from "./tadodata";
 
 export class Client {
 	private static _instance: Client;
 
 	private jayson: any;
 	private bfmbToken: string;
+	private tadoData: TadoData;
 	private messageHandler: MessageHandler;
 	private messageProcessor: MessageProcessor;
 
 	constructor() {
 		this.bfmbToken = "";
+		this.tadoData = new TadoData();
 		this.messageHandler = new MessageHandler();
 		this.messageProcessor = new MessageProcessor();
 	}

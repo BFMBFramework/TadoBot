@@ -8,7 +8,7 @@ class MessageProcessor {
     processMessage(message) {
         console.log(util.inspect(message, false, null, true));
         if (this.isAValidCommand(message)) {
-            if (!this.isAuthorizedUser(message.from.username)) {
+            if (!this.isAuthorizedUser(message.from.username) && this.isAPrivateCommand(message)) {
                 this.sendAuthDenegationMessage(message);
                 return;
             }
@@ -21,7 +21,12 @@ class MessageProcessor {
     isAValidCommand(message) {
         logger_1.logger.info("Message text: " + message.text);
         let commands = message.text.split(" ");
-        return config_1.config.availableCommands.includes(commands[0]);
+        return (config_1.config.publicCommands.includes(commands[0]) || config_1.config.privateCommands.includes(commands[0]));
+    }
+    isAPrivateCommand(message) {
+        logger_1.logger.info("Message text: " + message.text);
+        let commands = message.text.split(" ");
+        return (config_1.config.publicCommands.includes(commands[0]) || config_1.config.privateCommands.includes(commands[0]));
     }
     getMessageOptionsForResponse(message, text) {
         return {
@@ -36,6 +41,8 @@ class MessageProcessor {
             case "/start":
             case "/help":
                 self.sendHelpCommandMessage(message);
+                break;
+            case "/getWeather":
         }
     }
     sendAuthDenegationMessage(message) {
@@ -55,8 +62,26 @@ class MessageProcessor {
     sendHelpCommandMessage(message) {
         const clientClass = client_1.Client.sharedInstance;
         const self = client_1.Client.sharedInstance.getMessageProcessor();
+        const genericHelp = `Welcome to Tadobot.
+This bot can check the temperatures of your house and set them.
+To see the public commands: /help public
+The rest of them are private commands where the user must be on whitelist.
+To see the private commands: /help private`;
+        const publicMethodHelp = `Public commands: 
+${config_1.config.publicCommands.join('\n')}`;
+        let commandArgs = message.text.split(" ");
+        let helpMessage = genericHelp;
+        if (commandArgs.length > 1) {
+            switch (commandArgs[1]) {
+                case "public":
+                    helpMessage = publicMethodHelp;
+                    break;
+                case "private":
+                    helpMessage = publicMethodHelp;
+                    break;
+            }
+        }
         logger_1.logger.info("Sending help command response...");
-        let helpMessage = "This is the help command message.";
         let options = self.getMessageOptionsForResponse(message, helpMessage);
         clientClass.getJaysonClient().request('sendMessage', { token: clientClass.getToken(), network: 'Telegram', options: options }, function (err, response) {
             if (err) {
@@ -66,6 +91,8 @@ class MessageProcessor {
                 logger_1.logger.info("Help message sent.");
             }
         });
+    }
+    getWeatherCommand(message) {
     }
 }
 exports.MessageProcessor = MessageProcessor;

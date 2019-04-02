@@ -7,9 +7,11 @@ const config_1 = require("./config");
 const package_1 = require("./package");
 const messages_1 = require("./messages");
 const mesprocessor_1 = require("./mesprocessor");
+const tadodata_1 = require("./tadodata");
 class Client {
     constructor() {
         this.bfmbToken = "";
+        this.tadoData = new tadodata_1.TadoData();
         this.messageHandler = new messages_1.MessageHandler();
         this.messageProcessor = new mesprocessor_1.MessageProcessor();
     }

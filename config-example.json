@@ -12,7 +12,11 @@
 	"authorizedUsernames": [
 		"Fakeuser"
 	],
-	"availableCommands": [
+	"publicCommands": [
+		"/start",
 		"/help"
+	],
+	"privateCommands": [
+
 	]
 }
