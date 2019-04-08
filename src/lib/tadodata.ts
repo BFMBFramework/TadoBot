@@ -1,43 +1,71 @@
 export class TadoData {
-	private me: TadoMe;
+	private _me: TadoMe;
 
-	set tadoMeData(homes: any[]) {
-		this.me = new TadoMe(homes);
+	settadoMeData(homes: any[]) {
+		this._me = new TadoMe(homes);
 	}
 
-	get tadoMe(): TadoMe {
-		return this.me;
+	get me(): TadoMe {
+		return this._me;
 	}
 }
 
 export class TadoMe {
-	private homes: TadoHome[];
+	private _homes: TadoHome[];
 
 	constructor(homes: any[]) {
-		this.homes = homes.map(function(value: any, index: number, array: any[]): TadoHome {
+		this._homes = homes.map(function(value: any, index: number, array: any[]): TadoHome {
 			return new TadoHome(value.id, value.name);
 		});
 	}
 
-	get myHomes(): TadoHome[] {
-		return this.homes;
+	get homes(): TadoHome[] {
+		return this._homes;
 	}
 }
 
 export class TadoHome {
-	private id: string;
-	private name: string;
+	private _id: string;
+	private _name: string;
+	private _zones: TadoZone[];
+
+	constructor(id: string, name: string, zones: TadoZone[] = []) {
+		this._id = id;
+		this._name = name;
+		this._zones = zones;
+	}
+
+	get id(): string {
+		return this._id;
+	}
+
+	get name(): string {
+		return this._name;
+	}
+
+	get zones(): TadoZone[] {
+		return this._zones;
+	}
+
+	set zones(zones: TadoZone[]) {
+		this._zones = zones;
+	}
+}
+
+export class TadoZone {
+	private _id: string;
+	private _name: string;
 
 	constructor(id: string, name: string) {
-		this.id = id;
-		this.name = name;
+		this._id = id;
+		this._name = name;
 	}
 
-	get homeId(): string {
-		return this.id;
+	get id(): string {
+		return this._id;
 	}
 
-	get homeName(): string {
-		return this.name;
+	get name(): string {
+		return this._name;
 	}
 }
