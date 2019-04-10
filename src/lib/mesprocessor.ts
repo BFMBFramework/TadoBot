@@ -1,11 +1,40 @@
 import * as util from "util";
+import * as async from "async";
 
 import {logger} from "./logger";
 import {config} from "./config";
 
 import {Client} from "./client";
+import {TadoData, TadoHome} from "./tadodata";
 
 export class MessageProcessor {
+	private tadoData: TadoData;
+
+	constructor() {
+		this.tadoData = new TadoData();
+	}
+
+	loadTadoData(callback: Function): void {
+		const clientClass = Client.sharedInstance;
+		const self = clientClass.getMessageProcessor();
+		logger.info("Requesting Tado data...");
+		clientClass.getJaysonClient().request('getMe', {token: clientClass.getToken(), network: 'Tado', options: {}}, function(err: Error, response: any) {
+			logger.debug(util.inspect(response, false, null, true));
+			if (err) {
+				callback(err);
+				return
+			}
+			self.tadoData.setTadoMeData(response.result.homes);
+			for (let tadoHomeIndex in self.tadoData.me.homes) {
+				clientClass.getJaysonClient().request('receiveMessage', {token: clientClass.getToken(), network: 'Tado',
+				 options: {api_method: 'getZones', home_id: self.tadoData.me.homes[tadoHomeIndex].id}}, function(err: Error, response: any) {
+						logger.info(util.inspect(response, false, null, true));
+						self.tadoData.me.homes[tadoHomeIndex].setZonesData(response.result);
+						callback(null, true);
+				});
+			}
+		});
+	}
 
 	processMessage(message: any): void {
 		console.log(util.inspect(message, false, null, true));
@@ -15,6 +44,8 @@ export class MessageProcessor {
 				return
 			}
 			this.doCommand(message);
+		} else {
+			this.sendNoCommandMessage(message);
 		}
 	}
 
@@ -50,7 +81,8 @@ export class MessageProcessor {
 				self.sendHelpCommandMessage(message);
 				break;
 			case "/getWeather":
-
+				self.getWeatherCommand(message);
+				break;
 		}
 	}
 
@@ -64,6 +96,20 @@ export class MessageProcessor {
 				logger.error(err.message);
 			} else {
 				logger.info("Auth denied message sent.");
+			}
+		});
+	}
+
+	private sendNoCommandMessage(message: any): void {
+		const clientClass = Client.sharedInstance;
+		const self = Client.sharedInstance.getMessageProcessor();
+		logger.info(message.from.username + " requested a no recognized command.");
+		let options = self.getMessageOptionsForResponse(message, "No command found. Check configuration.");
+		clientClass.getJaysonClient().request('sendMessage', {token: clientClass.getToken(), network: 'Telegram', options: options}, function(err: Error, response: any) {
+			if (err) {
+				logger.error(err.message);
+			} else {
+				logger.info("No command message sent.");
 			}
 		});
 	}
@@ -103,6 +149,30 @@ ${config.publicCommands.join('\n')}`;
 	}
 
 	private getWeatherCommand(message: any): void {
-		
+		const clientClass = Client.sharedInstance;
+		const self = Client.sharedInstance.getMessageProcessor();
+		const genericHelp = `/getWeather <Name of home>
+Your homes are: `;
+
+		let commandArgs: string[] = message.text.split(" ");
+		let helpMessage: string = genericHelp + self.getHomeNameList().join(", ");
+		if (commandArgs.length > 1) {
+		}
+		logger.info("Sending help command response...");
+		let options = self.getMessageOptionsForResponse(message, helpMessage);
+		clientClass.getJaysonClient().request('sendMessage', {token: clientClass.getToken(), network: 'Telegram', options: options}, function(err: Error, response: any) {
+			if (err) {
+				logger.error(err.message);
+			} else {
+				logger.info("Help message sent.");
+			}
+		});
+	}
+
+	private getHomeNameList(): string[] {
+		const self = Client.sharedInstance.getMessageProcessor();
+		return self.tadoData.me.homes.map(function(value: TadoHome, index: number, array: TadoHome[]): string {
+			return value.name;
+		});
 	}
 }

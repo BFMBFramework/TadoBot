@@ -1,7 +1,7 @@
 export class TadoData {
 	private _me: TadoMe;
 
-	settadoMeData(homes: any[]) {
+	setTadoMeData(homes: any[]) {
 		this._me = new TadoMe(homes);
 	}
 
@@ -47,8 +47,10 @@ export class TadoHome {
 		return this._zones;
 	}
 
-	set zones(zones: TadoZone[]) {
-		this._zones = zones;
+	setZonesData(zones: any[]) {
+		this._zones = zones.map(function(value: any, index: number, array: any[]): TadoZone {
+			return new TadoZone(value.id, value.name);
+		});
 	}
 }
 

@@ -14,13 +14,11 @@ export class Client {
 
 	private jayson: any;
 	private bfmbToken: string;
-	private tadoData: TadoData;
 	private messageHandler: MessageHandler;
 	private messageProcessor: MessageProcessor;
 
 	constructor() {
 		this.bfmbToken = "";
-		this.tadoData = new TadoData();
 		this.messageHandler = new MessageHandler();
 		this.messageProcessor = new MessageProcessor();
 	}
@@ -86,6 +84,13 @@ export class Client {
 			logger.info("Response received, adding token...");
 			logger.debug("Response received: \n" + util.inspect(response, false, null, true));
 			Client.sharedInstance.bfmbToken = response.result;
+			Client.sharedInstance.getMessageProcessor().loadTadoData(function(err: Error, success: boolean) {
+				if (success) {
+					logger.info("Tado data loaded.");
+				} else {
+					logger.error(err.message);
+				}
+			});
 		} else {
 			logger.error("Error in response: \n" + util.inspect(response, false, null, true));
 			process.exit(1);
@@ -100,6 +105,6 @@ export class Client {
 				callback(null, response);
 			}
 
-		})
+		});
 	}
 }

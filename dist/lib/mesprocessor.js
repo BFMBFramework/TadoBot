@@ -4,7 +4,32 @@ const util = require("util");
 const logger_1 = require("./logger");
 const config_1 = require("./config");
 const client_1 = require("./client");
+const tadodata_1 = require("./tadodata");
 class MessageProcessor {
+    constructor() {
+        this.tadoData = new tadodata_1.TadoData();
+    }
+    loadTadoData(callback) {
+        const clientClass = client_1.Client.sharedInstance;
+        const self = clientClass.getMessageProcessor();
+        logger_1.logger.info("Requesting Tado data...");
+        clientClass.getJaysonClient().request('getMe', { token: clientClass.getToken(), network: 'Tado', options: {} }, function (err, response) {
+            logger_1.logger.debug(util.inspect(response, false, null, true));
+            if (err) {
+                callback(err);
+                return;
+            }
+            self.tadoData.setTadoMeData(response.result.homes);
+            for (let tadoHomeIndex in self.tadoData.me.homes) {
+                clientClass.getJaysonClient().request('receiveMessage', { token: clientClass.getToken(), network: 'Tado',
+                    options: { api_method: 'getZones', home_id: self.tadoData.me.homes[tadoHomeIndex].id } }, function (err, response) {
+                    logger_1.logger.info(util.inspect(response, false, null, true));
+                    self.tadoData.me.homes[tadoHomeIndex].setZonesData(response.result);
+                    callback(null, true);
+                });
+            }
+        });
+    }
     processMessage(message) {
         console.log(util.inspect(message, false, null, true));
         if (this.isAValidCommand(message)) {
@@ -13,6 +38,9 @@ class MessageProcessor {
                 return;
             }
             this.doCommand(message);
+        }
+        else {
+            this.sendNoCommandMessage(message);
         }
     }
     isAuthorizedUser(username) {
@@ -43,6 +71,8 @@ class MessageProcessor {
                 self.sendHelpCommandMessage(message);
                 break;
             case "/getWeather":
+                self.getWeatherCommand(message);
+                break;
         }
     }
     sendAuthDenegationMessage(message) {
@@ -56,6 +86,20 @@ class MessageProcessor {
             }
             else {
                 logger_1.logger.info("Auth denied message sent.");
+            }
+        });
+    }
+    sendNoCommandMessage(message) {
+        const clientClass = client_1.Client.sharedInstance;
+        const self = client_1.Client.sharedInstance.getMessageProcessor();
+        logger_1.logger.info(message.from.username + " requested a no recognized command.");
+        let options = self.getMessageOptionsForResponse(message, "No command found. Check configuration.");
+        clientClass.getJaysonClient().request('sendMessage', { token: clientClass.getToken(), network: 'Telegram', options: options }, function (err, response) {
+            if (err) {
+                logger_1.logger.error(err.message);
+            }
+            else {
+                logger_1.logger.info("No command message sent.");
             }
         });
     }
@@ -93,6 +137,30 @@ ${config_1.config.publicCommands.join('\n')}`;
         });
     }
     getWeatherCommand(message) {
+        const clientClass = client_1.Client.sharedInstance;
+        const self = client_1.Client.sharedInstance.getMessageProcessor();
+        const genericHelp = `/getWeather <Name of home>
+Your homes are: `;
+        let commandArgs = message.text.split(" ");
+        let helpMessage = genericHelp + self.getHomeNameList().join(", ");
+        if (commandArgs.length > 1) {
+        }
+        logger_1.logger.info("Sending help command response...");
+        let options = self.getMessageOptionsForResponse(message, helpMessage);
+        clientClass.getJaysonClient().request('sendMessage', { token: clientClass.getToken(), network: 'Telegram', options: options }, function (err, response) {
+            if (err) {
+                logger_1.logger.error(err.message);
+            }
+            else {
+                logger_1.logger.info("Help message sent.");
+            }
+        });
+    }
+    getHomeNameList() {
+        const self = client_1.Client.sharedInstance.getMessageProcessor();
+        return self.tadoData.me.homes.map(function (value, index, array) {
+            return value.name;
+        });
     }
 }
 exports.MessageProcessor = MessageProcessor;

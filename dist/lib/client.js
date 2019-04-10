@@ -7,11 +7,9 @@ const config_1 = require("./config");
 const package_1 = require("./package");
 const messages_1 = require("./messages");
 const mesprocessor_1 = require("./mesprocessor");
-const tadodata_1 = require("./tadodata");
 class Client {
     constructor() {
         this.bfmbToken = "";
-        this.tadoData = new tadodata_1.TadoData();
         this.messageHandler = new messages_1.MessageHandler();
         this.messageProcessor = new mesprocessor_1.MessageProcessor();
     }
@@ -69,6 +67,14 @@ class Client {
             logger_1.logger.info("Response received, adding token...");
             logger_1.logger.debug("Response received: \n" + util.inspect(response, false, null, true));
             Client.sharedInstance.bfmbToken = response.result;
+            Client.sharedInstance.getMessageProcessor().loadTadoData(function (err, success) {
+                if (success) {
+                    logger_1.logger.info("Tado data loaded.");
+                }
+                else {
+                    logger_1.logger.error(err.message);
+                }
+            });
         }
         else {
             logger_1.logger.error("Error in response: \n" + util.inspect(response, false, null, true));
