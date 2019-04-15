@@ -23,7 +23,7 @@ class MessageProcessor {
             for (let tadoHomeIndex in self.tadoData.me.homes) {
                 clientClass.getJaysonClient().request('receiveMessage', { token: clientClass.getToken(), network: 'Tado',
                     options: { api_method: 'getZones', home_id: self.tadoData.me.homes[tadoHomeIndex].id } }, function (err, response) {
-                    logger_1.logger.info(util.inspect(response, false, null, true));
+                    logger_1.logger.debug(util.inspect(response, false, null, true));
                     self.tadoData.me.homes[tadoHomeIndex].setZonesData(response.result);
                     callback(null, true);
                 });
@@ -47,12 +47,12 @@ class MessageProcessor {
         return config_1.config.authorizedUsernames.includes(username);
     }
     isAValidCommand(message) {
-        logger_1.logger.info("Message text: " + message.text);
+        logger_1.logger.debug("Message text: " + message.text);
         let commands = message.text.split(" ");
         return (config_1.config.publicCommands.includes(commands[0]) || config_1.config.privateCommands.includes(commands[0]));
     }
     isAPrivateCommand(message) {
-        logger_1.logger.info("Message text: " + message.text);
+        logger_1.logger.debug("Message text: " + message.text);
         let commands = message.text.split(" ");
         return (config_1.config.publicCommands.includes(commands[0]) || config_1.config.privateCommands.includes(commands[0]));
     }
@@ -72,6 +72,9 @@ class MessageProcessor {
                 break;
             case "/getWeather":
                 self.getWeatherCommand(message);
+                break;
+            case "/getZoneState":
+                self.getZoneStateCommand(message);
                 break;
         }
     }
@@ -113,6 +116,8 @@ The rest of them are private commands where the user must be on whitelist.
 To see the private commands: /help private`;
         const publicMethodHelp = `Public commands: 
 ${config_1.config.publicCommands.join('\n')}`;
+        const privateMethodHelp = `Private commands:
+${config_1.config.privateCommands.join('\n')}`;
         let commandArgs = message.text.split(" ");
         let helpMessage = genericHelp;
         if (commandArgs.length > 1) {
@@ -121,7 +126,7 @@ ${config_1.config.publicCommands.join('\n')}`;
                     helpMessage = publicMethodHelp;
                     break;
                 case "private":
-                    helpMessage = publicMethodHelp;
+                    helpMessage = privateMethodHelp;
                     break;
             }
         }
@@ -144,6 +149,66 @@ Your homes are: `;
         let commandArgs = message.text.split(" ");
         let helpMessage = genericHelp + self.getHomeNameList().join(", ");
         if (commandArgs.length > 1) {
+            commandArgs.shift();
+            let homeName = commandArgs.join(" ");
+            let homeId = self.getHomeIdBy(homeName);
+            clientClass.getJaysonClient().request('receiveMessage', { token: clientClass.getToken(), network: 'Tado', options: { api_method: 'getWeather', home_id: homeId } }, function (err, response) {
+                let weatherString = `Weather around of ${homeName}: 
+${response.result.weatherState.value}, ${response.result.outsideTemperature.celsius} ºC, ${response.result.outsideTemperature.fahrenheit} ºF.`;
+                let options = self.getMessageOptionsForResponse(message, weatherString);
+                clientClass.getJaysonClient().request('sendMessage', { token: clientClass.getToken(), network: 'Telegram', options: options }, function (err, response) {
+                    if (err) {
+                        logger_1.logger.error(err.message);
+                    }
+                    else {
+                        logger_1.logger.info("Weather result sent.");
+                    }
+                });
+            });
+            return;
+        }
+        logger_1.logger.info("Sending help command response...");
+        let options = self.getMessageOptionsForResponse(message, helpMessage);
+        clientClass.getJaysonClient().request('sendMessage', { token: clientClass.getToken(), network: 'Telegram', options: options }, function (err, response) {
+            if (err) {
+                logger_1.logger.error(err.message);
+            }
+            else {
+                logger_1.logger.info("Help message sent.");
+            }
+        });
+    }
+    getZoneStateCommand(message) {
+        const clientClass = client_1.Client.sharedInstance;
+        const self = client_1.Client.sharedInstance.getMessageProcessor();
+        let helpMessage = `/getZoneState <Name of home>-<Name of zone>
+Your homes are: ${self.getHomeNameList().join(", ")}`;
+        let commandArgs = message.text.split(" ");
+        if (commandArgs.length > 1) {
+            commandArgs.shift();
+            let homeZone = commandArgs.join(" ");
+            let homeZoneArray = homeZone.split("-");
+            if (homeZoneArray.length > 1) {
+                let homeId = self.getHomeIdBy(homeZoneArray[0]);
+                let zoneId = self.getZoneIdBy(homeId, homeZoneArray[1]);
+                clientClass.getJaysonClient().request('receiveMessage', { token: clientClass.getToken(), network: 'Tado', options: { api_method: 'getZoneState', home_id: homeId, zone_id: zoneId } }, function (err, response) {
+                    let weatherString = `State in ${homeZone}:
+Heating: ${response.result.setting.power}. Target temperature: ${response.result.setting.temperature.celsius} ºC / ${response.result.setting.temperature.fahrenheit} ºF
+Actual temperature: ${response.result.sensorDataPoints.insideTemperature.celsius} ºC / ${response.result.sensorDataPoints.insideTemperature.fahrenheit} ºF
+Humidity: ${response.result.sensorDataPoints.humidity.percentage} %`;
+                    let options = self.getMessageOptionsForResponse(message, weatherString);
+                    clientClass.getJaysonClient().request('sendMessage', { token: clientClass.getToken(), network: 'Telegram', options: options }, function (err, response) {
+                        if (err) {
+                            logger_1.logger.error(err.message);
+                        }
+                        else {
+                            logger_1.logger.info("Zone state result sent.");
+                        }
+                    });
+                });
+                return;
+            }
+            helpMessage += `\nYour zones for ${homeZoneArray[0]} are: ${self.getZoneNameListBy(homeZoneArray[0]).join(", ")}`;
         }
         logger_1.logger.info("Sending help command response...");
         let options = self.getMessageOptionsForResponse(message, helpMessage);
@@ -159,6 +224,24 @@ Your homes are: `;
     getHomeNameList() {
         const self = client_1.Client.sharedInstance.getMessageProcessor();
         return self.tadoData.me.homes.map(function (value, index, array) {
+            return value.name;
+        });
+    }
+    getHomeIdBy(name) {
+        const self = client_1.Client.sharedInstance.getMessageProcessor();
+        let home = self.tadoData.me.homes.find(i => i.name == name);
+        return home.id;
+    }
+    getZoneIdBy(homeId, name) {
+        const self = client_1.Client.sharedInstance.getMessageProcessor();
+        let home = self.tadoData.me.homes.find(i => i.id == homeId);
+        let zone = home.zones.find(i => i.name == name);
+        return zone.id;
+    }
+    getZoneNameListBy(homeName) {
+        const self = client_1.Client.sharedInstance.getMessageProcessor();
+        let home = self.tadoData.me.homes.find(i => i.name == homeName);
+        return home.zones.map(function (value, index, array) {
             return value.name;
         });
     }
