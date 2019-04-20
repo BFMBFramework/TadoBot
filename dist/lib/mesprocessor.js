@@ -47,14 +47,18 @@ class MessageProcessor {
         return config_1.config.authorizedUsernames.includes(username);
     }
     isAValidCommand(message) {
-        logger_1.logger.debug("Message text: " + message.text);
-        let commands = message.text.split(" ");
-        return (config_1.config.publicCommands.includes(commands[0]) || config_1.config.privateCommands.includes(commands[0]));
+        if (message.text) {
+            logger_1.logger.debug("Message text: " + message.text);
+            let commands = message.text.split(" ");
+            return (config_1.config.publicCommands.includes(commands[0]) || config_1.config.privateCommands.includes(commands[0]));
+        }
     }
     isAPrivateCommand(message) {
-        logger_1.logger.debug("Message text: " + message.text);
-        let commands = message.text.split(" ");
-        return (config_1.config.publicCommands.includes(commands[0]) || config_1.config.privateCommands.includes(commands[0]));
+        if (message.text) {
+            logger_1.logger.debug("Message text: " + message.text);
+            let commands = message.text.split(" ");
+            return (config_1.config.publicCommands.includes(commands[0]) || config_1.config.privateCommands.includes(commands[0]));
+        }
     }
     getMessageOptionsForResponse(message, text) {
         return {
@@ -192,11 +196,13 @@ Your homes are: ${self.getHomeNameList().join(", ")}`;
                 let homeId = self.getHomeIdBy(homeZoneArray[0]);
                 let zoneId = self.getZoneIdBy(homeId, homeZoneArray[1]);
                 clientClass.getJaysonClient().request('receiveMessage', { token: clientClass.getToken(), network: 'Tado', options: { api_method: 'getZoneState', home_id: homeId, zone_id: zoneId } }, function (err, response) {
-                    let weatherString = `State in ${homeZone}:
-Heating: ${response.result.setting.power}. Target temperature: ${response.result.setting.temperature.celsius} ºC / ${response.result.setting.temperature.fahrenheit} ºF
-Actual temperature: ${response.result.sensorDataPoints.insideTemperature.celsius} ºC / ${response.result.sensorDataPoints.insideTemperature.fahrenheit} ºF
+                    let stateString = `State in ${homeZone}:\nHeating: ${response.result.setting.power}.\n`;
+                    if (response.result.setting.temperature) {
+                        stateString += 'Target temperature: ${response.result.setting.temperature.celsius} ºC / ${response.result.setting.temperature.fahrenheit} ºF\n';
+                    }
+                    stateString += `Actual temperature: ${response.result.sensorDataPoints.insideTemperature.celsius} ºC / ${response.result.sensorDataPoints.insideTemperature.fahrenheit} ºF
 Humidity: ${response.result.sensorDataPoints.humidity.percentage} %`;
-                    let options = self.getMessageOptionsForResponse(message, weatherString);
+                    let options = self.getMessageOptionsForResponse(message, stateString);
                     clientClass.getJaysonClient().request('sendMessage', { token: clientClass.getToken(), network: 'Telegram', options: options }, function (err, response) {
                         if (err) {
                             logger_1.logger.error(err.message);

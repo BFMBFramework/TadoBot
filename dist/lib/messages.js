@@ -33,7 +33,9 @@ class MessageHandler {
         }
         let messages = response.result;
         for (let message of messages) {
-            messageProcessor.processMessage(message.message);
+            if (message.message) {
+                messageProcessor.processMessage(message.message);
+            }
         }
     }
 }
