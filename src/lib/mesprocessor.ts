@@ -90,6 +90,14 @@ export class MessageProcessor {
 			case "/getZoneState":
 				self.getZoneStateCommand(message);
 				break;
+			case "/getZoneOverlay":
+				self.getZoneOverlayCommand(message);
+				break;
+			case "/setZoneOverlay":
+				self.setZoneOverlayCommand(message);
+				break;
+			case "/clearZoneOverlay":
+				self.clearZoneOverlayCommand(message);
 		}
 	}
 
@@ -264,6 +272,143 @@ Humidity: ${response.result.sensorDataPoints.humidity.percentage} %`;
 		let home = self.tadoData.me.homes.find(i => i.name == homeName);
 		return home.zones.map(function(value: TadoZone, index: number, array: TadoZone[]): string {
 			return value.name;
+		});
+	}
+
+	private getZoneOverlayCommand(message: any) {
+		const clientClass = Client.sharedInstance;
+		const self = Client.sharedInstance.getMessageProcessor();
+		let helpMessage = `/getZoneOverlay <Name of home>-<Name of zone>
+Your homes are: ${self.getHomeNameList().join(", ")}`;
+		let commandArgs: string[] = message.text.split(" ");
+		if (commandArgs.length > 1) {
+			commandArgs.shift();
+			let homeZone = commandArgs.join(" ");
+			let homeZoneArray = homeZone.split("-");
+			if (homeZoneArray.length > 1) {
+				let homeId = self.getHomeIdBy(homeZoneArray[0]);
+				let zoneId = self.getZoneIdBy(homeId, homeZoneArray[1]);
+				clientClass.getJaysonClient().request('receiveMessage',
+					{token: clientClass.getToken(), network: 'Tado', options: {api_method: 'getZoneOverlay', home_id: homeId, zone_id: zoneId}}, function(err: Error, response: any) {
+// 					let stateString = `State in ${homeZone}:\nHeating: ${response.result.setting.power}.\n` 
+// 					if (response.result.setting.temperature) {
+// 						stateString += 'Target temperature: ${response.result.setting.temperature.celsius} ºC / ${response.result.setting.temperature.fahrenheit} ºF\n'
+// 					} 
+// 					stateString += `Actual temperature: ${response.result.sensorDataPoints.insideTemperature.celsius} ºC / ${response.result.sensorDataPoints.insideTemperature.fahrenheit} ºF
+// Humidity: ${response.result.sensorDataPoints.humidity.percentage} %`;
+// 					let options = self.getMessageOptionsForResponse(message, stateString);
+// 					clientClass.getJaysonClient().request('sendMessage', {token: clientClass.getToken(), network: 'Telegram', options: options}, function(err: Error, response: any) {
+// 						if (err) {
+// 							logger.error(err.message);
+// 						} else {
+// 							logger.info("Zone state result sent.");
+// 						}
+					// });
+				});
+				return;
+			}
+			helpMessage += `\nYour zones for ${homeZoneArray[0]} are: ${self.getZoneNameListBy(homeZoneArray[0]).join(", ")}`;
+		}
+		logger.info("Sending help command response...");
+		let options = self.getMessageOptionsForResponse(message, helpMessage);
+		clientClass.getJaysonClient().request('sendMessage', {token: clientClass.getToken(), network: 'Telegram', options: options}, function(err: Error, response: any) {
+			if (err) {
+				logger.error(err.message);
+			} else {
+				logger.info("Help message sent.");
+			}
+		});
+	}
+
+	private setZoneOverlayCommand(message: any) {
+		const clientClass = Client.sharedInstance;
+		const self = Client.sharedInstance.getMessageProcessor();
+		let helpMessage = `/setZoneOverlay <Name of home>-<Name of zone> <Heating on / off> <Temperature to set> <Time until end / auto>
+Your homes are: ${self.getHomeNameList().join(", ")}`;
+		let commandArgs: string[] = message.text.split(" ");
+		if (commandArgs.length > 1) {
+			commandArgs.shift();
+			let homeZone = commandArgs.join(" ");
+			let homeZoneArray = homeZone.split("-");
+			if (homeZoneArray.length > 1) {
+				let homeId = self.getHomeIdBy(homeZoneArray[0]);
+				let zoneId = self.getZoneIdBy(homeId, homeZoneArray[1]);
+				clientClass.getJaysonClient().request('receiveMessage',
+					{
+						token: clientClass.getToken(), network: 'Tado',
+						options: {api_method: 'setZoneOverlay', home_id: homeId, zone_id: zoneId, power: "off", temperature: "5", termination: "auto"}}, function(err: Error, response: any) {
+// 					let stateString = `State in ${homeZone}:\nHeating: ${response.result.setting.power}.\n` 
+// 					if (response.result.setting.temperature) {
+// 						stateString += 'Target temperature: ${response.result.setting.temperature.celsius} ºC / ${response.result.setting.temperature.fahrenheit} ºF\n'
+// 					} 
+// 					stateString += `Actual temperature: ${response.result.sensorDataPoints.insideTemperature.celsius} ºC / ${response.result.sensorDataPoints.insideTemperature.fahrenheit} ºF
+// Humidity: ${response.result.sensorDataPoints.humidity.percentage} %`;
+// 					let options = self.getMessageOptionsForResponse(message, stateString);
+// 					clientClass.getJaysonClient().request('sendMessage', {token: clientClass.getToken(), network: 'Telegram', options: options}, function(err: Error, response: any) {
+// 						if (err) {
+// 							logger.error(err.message);
+// 						} else {
+// 							logger.info("Zone state result sent.");
+// 						}
+					// });
+				});
+				return;
+			}
+			helpMessage += `\nYour zones for ${homeZoneArray[0]} are: ${self.getZoneNameListBy(homeZoneArray[0]).join(", ")}`;
+		}
+		logger.info("Sending help command response...");
+		let options = self.getMessageOptionsForResponse(message, helpMessage);
+		clientClass.getJaysonClient().request('sendMessage', {token: clientClass.getToken(), network: 'Telegram', options: options}, function(err: Error, response: any) {
+			if (err) {
+				logger.error(err.message);
+			} else {
+				logger.info("Help message sent.");
+			}
+		});
+	}
+
+	private clearZoneOverlayCommand(message: any) {
+		const clientClass = Client.sharedInstance;
+		const self = Client.sharedInstance.getMessageProcessor();
+		let helpMessage = `/clearZoneOverlay <Name of home>-<Name of zone>
+Your homes are: ${self.getHomeNameList().join(", ")}`;
+		let commandArgs: string[] = message.text.split(" ");
+		if (commandArgs.length > 1) {
+			commandArgs.shift();
+			let homeZone = commandArgs.join(" ");
+			let homeZoneArray = homeZone.split("-");
+			if (homeZoneArray.length > 1) {
+				let homeId = self.getHomeIdBy(homeZoneArray[0]);
+				let zoneId = self.getZoneIdBy(homeId, homeZoneArray[1]);
+				clientClass.getJaysonClient().request('receiveMessage',
+					{token: clientClass.getToken(), network: 'Tado', options: {api_method: 'clearZoneOverlay', home_id: homeId, zone_id: zoneId}}, function(err: Error, response: any) {
+// 					let stateString = `State in ${homeZone}:\nHeating: ${response.result.setting.power}.\n` 
+// 					if (response.result.setting.temperature) {
+// 						stateString += 'Target temperature: ${response.result.setting.temperature.celsius} ºC / ${response.result.setting.temperature.fahrenheit} ºF\n'
+// 					} 
+// 					stateString += `Actual temperature: ${response.result.sensorDataPoints.insideTemperature.celsius} ºC / ${response.result.sensorDataPoints.insideTemperature.fahrenheit} ºF
+// Humidity: ${response.result.sensorDataPoints.humidity.percentage} %`;
+// 					let options = self.getMessageOptionsForResponse(message, stateString);
+// 					clientClass.getJaysonClient().request('sendMessage', {token: clientClass.getToken(), network: 'Telegram', options: options}, function(err: Error, response: any) {
+// 						if (err) {
+// 							logger.error(err.message);
+// 						} else {
+// 							logger.info("Zone state result sent.");
+// 						}
+					// });
+				});
+				return;
+			}
+			helpMessage += `\nYour zones for ${homeZoneArray[0]} are: ${self.getZoneNameListBy(homeZoneArray[0]).join(", ")}`;
+		}
+		logger.info("Sending help command response...");
+		let options = self.getMessageOptionsForResponse(message, helpMessage);
+		clientClass.getJaysonClient().request('sendMessage', {token: clientClass.getToken(), network: 'Telegram', options: options}, function(err: Error, response: any) {
+			if (err) {
+				logger.error(err.message);
+			} else {
+				logger.info("Help message sent.");
+			}
 		});
 	}
 }
