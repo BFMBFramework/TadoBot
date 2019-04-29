@@ -290,20 +290,27 @@ Your homes are: ${self.getHomeNameList().join(", ")}`;
 				let zoneId = self.getZoneIdBy(homeId, homeZoneArray[1]);
 				clientClass.getJaysonClient().request('receiveMessage',
 					{token: clientClass.getToken(), network: 'Tado', options: {api_method: 'getZoneOverlay', home_id: homeId, zone_id: zoneId}}, function(err: Error, response: any) {
-// 					let stateString = `State in ${homeZone}:\nHeating: ${response.result.setting.power}.\n` 
-// 					if (response.result.setting.temperature) {
-// 						stateString += 'Target temperature: ${response.result.setting.temperature.celsius} ºC / ${response.result.setting.temperature.fahrenheit} ºF\n'
-// 					} 
-// 					stateString += `Actual temperature: ${response.result.sensorDataPoints.insideTemperature.celsius} ºC / ${response.result.sensorDataPoints.insideTemperature.fahrenheit} ºF
-// Humidity: ${response.result.sensorDataPoints.humidity.percentage} %`;
-// 					let options = self.getMessageOptionsForResponse(message, stateString);
-// 					clientClass.getJaysonClient().request('sendMessage', {token: clientClass.getToken(), network: 'Telegram', options: options}, function(err: Error, response: any) {
-// 						if (err) {
-// 							logger.error(err.message);
-// 						} else {
-// 							logger.info("Zone state result sent.");
-// 						}
-					// });
+						let overlayString = `Overlay in ${homeZone}:\n`
+						if (err || !response.result) {
+							overlayString += `No overlay set.`
+						} else {
+							overlayString += `Heating: ${response.result.setting.power}.\n` 
+							if (response.result.setting.temperature) {
+								overlayString += `Target temperature: ${response.result.setting.temperature.celsius} ºC / ${response.result.setting.temperature.fahrenheit} ºF\n`
+							}
+							overlayString += `Termination: ${response.result.termination.type}\n`
+							if (response.result.termination.projectedExpiry) {
+								overlayString += `Termination projected: ${response.result.termination.projectedExpiry}`
+							}
+						}
+						let options = self.getMessageOptionsForResponse(message, overlayString);
+						clientClass.getJaysonClient().request('sendMessage', {token: clientClass.getToken(), network: 'Telegram', options: options}, function(err: Error, response: any) {
+							if (err) {
+								logger.error(err.message);
+							} else {
+								logger.info("Zone overlay result sent.");
+							}
+						});
 				});
 				return;
 			}
@@ -382,20 +389,15 @@ Your homes are: ${self.getHomeNameList().join(", ")}`;
 				let zoneId = self.getZoneIdBy(homeId, homeZoneArray[1]);
 				clientClass.getJaysonClient().request('receiveMessage',
 					{token: clientClass.getToken(), network: 'Tado', options: {api_method: 'clearZoneOverlay', home_id: homeId, zone_id: zoneId}}, function(err: Error, response: any) {
-// 					let stateString = `State in ${homeZone}:\nHeating: ${response.result.setting.power}.\n` 
-// 					if (response.result.setting.temperature) {
-// 						stateString += 'Target temperature: ${response.result.setting.temperature.celsius} ºC / ${response.result.setting.temperature.fahrenheit} ºF\n'
-// 					} 
-// 					stateString += `Actual temperature: ${response.result.sensorDataPoints.insideTemperature.celsius} ºC / ${response.result.sensorDataPoints.insideTemperature.fahrenheit} ºF
-// Humidity: ${response.result.sensorDataPoints.humidity.percentage} %`;
-// 					let options = self.getMessageOptionsForResponse(message, stateString);
-// 					clientClass.getJaysonClient().request('sendMessage', {token: clientClass.getToken(), network: 'Telegram', options: options}, function(err: Error, response: any) {
-// 						if (err) {
-// 							logger.error(err.message);
-// 						} else {
-// 							logger.info("Zone state result sent.");
-// 						}
-					// });
+						let clearOverlayString = `Clear overlay command sent to Tado.`
+						let options = self.getMessageOptionsForResponse(message, clearOverlayString);
+						clientClass.getJaysonClient().request('sendMessage', {token: clientClass.getToken(), network: 'Telegram', options: options}, function(err: Error, response: any) {
+							if (err) {
+								logger.error(err.message);
+							} else {
+								logger.info("Clear overlay result sent.");
+							}
+						});
 				});
 				return;
 			}

@@ -17,6 +17,10 @@
 		"/help"
 	],
 	"privateCommands": [
-
+		"/getWeather",
+		"/getZoneState",
+		"/getZoneOverlay",
+		"/setZoneOverlay",
+		"/clearZoneOverlay"
 	]
 }
