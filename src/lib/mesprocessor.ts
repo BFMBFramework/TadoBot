@@ -330,34 +330,32 @@ Your homes are: ${self.getHomeNameList().join(", ")}`;
 	private setZoneOverlayCommand(message: any) {
 		const clientClass = Client.sharedInstance;
 		const self = Client.sharedInstance.getMessageProcessor();
-		let helpMessage = `/setZoneOverlay <Name of home>-<Name of zone> <Heating on / off> <Temperature to set> <Time until end / auto>
+		let helpMessage = `/setZoneOverlay <Name of home>-<Name of zone>-<Heating on / off>-<Temperature to set>-<Time until end / auto>
 Your homes are: ${self.getHomeNameList().join(", ")}`;
 		let commandArgs: string[] = message.text.split(" ");
 		if (commandArgs.length > 1) {
 			commandArgs.shift();
 			let homeZone = commandArgs.join(" ");
 			let homeZoneArray = homeZone.split("-");
-			if (homeZoneArray.length > 1) {
+			if (homeZoneArray.length > 4) {
 				let homeId = self.getHomeIdBy(homeZoneArray[0]);
 				let zoneId = self.getZoneIdBy(homeId, homeZoneArray[1]);
-				clientClass.getJaysonClient().request('receiveMessage',
-					{
-						token: clientClass.getToken(), network: 'Tado',
-						options: {api_method: 'setZoneOverlay', home_id: homeId, zone_id: zoneId, power: "off", temperature: "5", termination: "auto"}}, function(err: Error, response: any) {
-// 					let stateString = `State in ${homeZone}:\nHeating: ${response.result.setting.power}.\n` 
-// 					if (response.result.setting.temperature) {
-// 						stateString += 'Target temperature: ${response.result.setting.temperature.celsius} ºC / ${response.result.setting.temperature.fahrenheit} ºF\n'
-// 					} 
-// 					stateString += `Actual temperature: ${response.result.sensorDataPoints.insideTemperature.celsius} ºC / ${response.result.sensorDataPoints.insideTemperature.fahrenheit} ºF
-// Humidity: ${response.result.sensorDataPoints.humidity.percentage} %`;
-// 					let options = self.getMessageOptionsForResponse(message, stateString);
-// 					clientClass.getJaysonClient().request('sendMessage', {token: clientClass.getToken(), network: 'Telegram', options: options}, function(err: Error, response: any) {
-// 						if (err) {
-// 							logger.error(err.message);
-// 						} else {
-// 							logger.info("Zone state result sent.");
-// 						}
-					// });
+				let power = homeZoneArray[2];
+				let temperature = Number(homeZoneArray[3]) || 0;
+				let termination = (homeZoneArray[4] == "auto") ? "auto" : (Number(homeZoneArray[4]) || 0)
+				clientClass.getJaysonClient().request('sendMessage', {
+					token: clientClass.getToken(), network: 'Tado', 
+					options: {api_method: 'setZoneOverlay', home_id: homeId, zone_id: zoneId, power: power, temperature: temperature, termination: termination}}, 
+					function(err: Error, response: any) {
+						let setOverlayString = `Set overlay command sent to Tado.`;
+						let options = self.getMessageOptionsForResponse(message, setOverlayString);
+						clientClass.getJaysonClient().request('sendMessage', {token: clientClass.getToken(), network: 'Telegram', options: options}, function(err: Error, response: any) {
+							if (err) {
+								logger.error(err.message);
+							} else {
+								logger.info("Set overlay result sent.");
+							}
+						});
 				});
 				return;
 			}
