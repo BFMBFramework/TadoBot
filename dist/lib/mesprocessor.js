@@ -206,7 +206,7 @@ Your homes are: ${self.getHomeNameList().join(", ")}`;
                 clientClass.getJaysonClient().request('receiveMessage', { token: clientClass.getToken(), network: 'Tado', options: { api_method: 'getZoneState', home_id: homeId, zone_id: zoneId } }, function (err, response) {
                     let stateString = `State in ${homeZone}:\nHeating: ${response.result.setting.power}.\n`;
                     if (response.result.setting.temperature) {
-                        stateString += 'Target temperature: ${response.result.setting.temperature.celsius} ºC / ${response.result.setting.temperature.fahrenheit} ºF\n';
+                        stateString += `Target temperature: ${response.result.setting.temperature.celsius} ºC / ${response.result.setting.temperature.fahrenheit} ºF\n`;
                     }
                     stateString += `Actual temperature: ${response.result.sensorDataPoints.insideTemperature.celsius} ºC / ${response.result.sensorDataPoints.insideTemperature.fahrenheit} ºF
 Humidity: ${response.result.sensorDataPoints.humidity.percentage} %`;
