@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/BFMBFramework/TadoBot#readme",
   "dependencies": {
-    "async": "^2.6.1",
+    "async": "^2.6.4",
     "jayson": "^2.1.0",
     "winston": "^2.4.4"
   },
